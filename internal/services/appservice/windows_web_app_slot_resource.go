@@ -65,6 +65,7 @@ type WindowsWebAppSlotModel struct {
 	ZipDeployFile                      string                                     `tfschema:"zip_deploy_file"`
 	Tags                               map[string]string                          `tfschema:"tags"`
 	VirtualNetworkBackupRestoreEnabled bool                                       `tfschema:"virtual_network_backup_restore_enabled"`
+	VirtualNetworkContentShareEnabled  bool                                       `tfschema:"virtual_network_content_share_enabled"`
 	VirtualNetworkImagePullEnabled     bool                                       `tfschema:"virtual_network_image_pull_enabled"`
 	VirtualNetworkSubnetID             string                                     `tfschema:"virtual_network_subnet_id"`
 }
@@ -209,6 +210,12 @@ func (r WindowsWebAppSlotResource) Arguments() map[string]*pluginsdk.Schema {
 		"tags": commonschema.Tags(),
 
 		"virtual_network_backup_restore_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+
+		"virtual_network_content_share_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
 			Default:  false,
@@ -376,6 +383,7 @@ func (r WindowsWebAppSlotResource) Create() sdk.ResourceFunc {
 					ClientCertMode:           pointer.To(webapps.ClientCertMode(webAppSlot.ClientCertMode)),
 					ClientCertExclusionPaths: pointer.To(webAppSlot.ClientCertExclusionPaths),
 					VnetBackupRestoreEnabled: pointer.To(webAppSlot.VirtualNetworkBackupRestoreEnabled),
+					VnetContentShareEnabled:  pointer.To(webAppSlot.VirtualNetworkContentShareEnabled),
 					VnetRouteAllEnabled:      siteConfig.VnetRouteAllEnabled,
 				},
 			}
@@ -666,6 +674,7 @@ func (r WindowsWebAppSlotResource) Read() sdk.ResourceFunc {
 					state.PossibleOutboundIPAddressList = strings.Split(pointer.From(props.PossibleOutboundIPAddresses), ",")
 					state.PublicNetworkAccess = !strings.EqualFold(pointer.From(props.PublicNetworkAccess), helpers.PublicNetworkAccessDisabled)
 					state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.VnetBackupRestoreEnabled)
+					state.VirtualNetworkContentShareEnabled = pointer.From(props.VnetContentShareEnabled)
 					state.VirtualNetworkImagePullEnabled = pointer.From(props.VnetImagePullEnabled)
 
 					if hostingEnv := props.HostingEnvironmentProfile; hostingEnv != nil {
@@ -893,6 +902,10 @@ func (r WindowsWebAppSlotResource) Update() sdk.ResourceFunc {
 
 			if metadata.ResourceData.HasChange("virtual_network_backup_restore_enabled") {
 				model.Properties.VnetBackupRestoreEnabled = pointer.To(state.VirtualNetworkBackupRestoreEnabled)
+			}
+
+			if metadata.ResourceData.HasChange("virtual_network_content_share_enabled") {
+				model.Properties.VnetContentShareEnabled = pointer.To(state.VirtualNetworkContentShareEnabled)
 			}
 
 			if metadata.ResourceData.HasChange("virtual_network_image_pull_enabled") {

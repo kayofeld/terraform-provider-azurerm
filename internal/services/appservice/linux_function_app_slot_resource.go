@@ -58,6 +58,7 @@ type LinuxFunctionAppSlotModel struct {
 	SiteConfig                         []helpers.SiteConfigLinuxFunctionAppSlot   `tfschema:"site_config"`
 	Tags                               map[string]string                          `tfschema:"tags"`
 	VirtualNetworkBackupRestoreEnabled bool                                       `tfschema:"virtual_network_backup_restore_enabled"`
+	VirtualNetworkContentShareEnabled  bool                                       `tfschema:"virtual_network_content_share_enabled"`
 	VirtualNetworkSubnetID             string                                     `tfschema:"virtual_network_subnet_id"`
 	CustomDomainVerificationId         string                                     `tfschema:"custom_domain_verification_id"`
 	HostingEnvId                       string                                     `tfschema:"hosting_environment_id"`
@@ -277,6 +278,12 @@ func (r LinuxFunctionAppSlotResource) Arguments() map[string]*pluginsdk.Schema {
 		"tags": commonschema.Tags(),
 
 		"virtual_network_backup_restore_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+
+		"virtual_network_content_share_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
 			Default:  false,
@@ -535,6 +542,7 @@ func (r LinuxFunctionAppSlotResource) Create() sdk.ResourceFunc {
 					ClientCertMode:           pointer.To(webapps.ClientCertMode(functionAppSlot.ClientCertMode)),
 					DailyMemoryTimeQuota:     pointer.To(functionAppSlot.DailyMemoryTimeQuota),
 					VnetBackupRestoreEnabled: pointer.To(functionAppSlot.VirtualNetworkBackupRestoreEnabled),
+					VnetContentShareEnabled:  pointer.To(functionAppSlot.VirtualNetworkContentShareEnabled),
 					VnetImagePullEnabled:     pointer.To(functionAppSlot.VnetImagePullEnabled),
 					VnetRouteAllEnabled:      siteConfig.VnetRouteAllEnabled, // (@jackofallops) - Value appear to need to be set in both SiteProperties and SiteConfig for now? https://github.com/Azure/azure-rest-api-specs/issues/24681
 				},
@@ -757,6 +765,7 @@ func (r LinuxFunctionAppSlotResource) Read() sdk.ResourceFunc {
 					state.DefaultHostname = pointer.From(props.DefaultHostName)
 					state.PublicNetworkAccess = !strings.EqualFold(pointer.From(props.PublicNetworkAccess), helpers.PublicNetworkAccessDisabled)
 					state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.VnetBackupRestoreEnabled)
+					state.VirtualNetworkContentShareEnabled = pointer.From(props.VnetContentShareEnabled)
 					state.VnetImagePullEnabled = pointer.From(props.VnetImagePullEnabled)
 
 					if hostingEnv := props.HostingEnvironmentProfile; hostingEnv != nil {
@@ -935,6 +944,10 @@ func (r LinuxFunctionAppSlotResource) Update() sdk.ResourceFunc {
 
 			if metadata.ResourceData.HasChange("virtual_network_backup_restore_enabled") {
 				model.Properties.VnetBackupRestoreEnabled = pointer.To(state.VirtualNetworkBackupRestoreEnabled)
+			}
+
+			if metadata.ResourceData.HasChange("virtual_network_content_share_enabled") {
+				model.Properties.VnetContentShareEnabled = pointer.To(state.VirtualNetworkContentShareEnabled)
 			}
 
 			if metadata.ResourceData.HasChange("virtual_network_subnet_id") {

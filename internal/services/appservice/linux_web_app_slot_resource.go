@@ -64,6 +64,7 @@ type LinuxWebAppSlotModel struct {
 	PublishingFTPBasicAuthEnabled      bool                                       `tfschema:"ftp_publish_basic_authentication_enabled"`
 	SiteCredentials                    []helpers.SiteCredential                   `tfschema:"site_credential"`
 	VirtualNetworkBackupRestoreEnabled bool                                       `tfschema:"virtual_network_backup_restore_enabled"`
+	VirtualNetworkContentShareEnabled  bool                                       `tfschema:"virtual_network_content_share_enabled"`
 	VirtualNetworkSubnetID             string                                     `tfschema:"virtual_network_subnet_id"`
 	VnetImagePullEnabled               bool                                       `tfschema:"vnet_image_pull_enabled"`
 }
@@ -162,6 +163,12 @@ func (r LinuxWebAppSlotResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"virtual_network_backup_restore_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+
+		"virtual_network_content_share_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
 			Default:  false,
@@ -365,6 +372,7 @@ func (r LinuxWebAppSlotResource) Create() sdk.ResourceFunc {
 					ClientCertEnabled:        pointer.To(webAppSlot.ClientCertEnabled),
 					ClientCertMode:           pointer.To(webapps.ClientCertMode(webAppSlot.ClientCertMode)),
 					VnetBackupRestoreEnabled: pointer.To(webAppSlot.VirtualNetworkBackupRestoreEnabled),
+					VnetContentShareEnabled:  pointer.To(webAppSlot.VirtualNetworkContentShareEnabled),
 					VnetRouteAllEnabled:      siteConfig.VnetRouteAllEnabled,
 					VnetImagePullEnabled:     pointer.To(webAppSlot.VnetImagePullEnabled),
 				},
@@ -620,6 +628,7 @@ func (r LinuxWebAppSlotResource) Read() sdk.ResourceFunc {
 					state.PossibleOutboundIPAddressList = strings.Split(pointer.From(props.PossibleOutboundIPAddresses), ",")
 					state.PublicNetworkAccess = !strings.EqualFold(pointer.From(props.PublicNetworkAccess), helpers.PublicNetworkAccessDisabled)
 					state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.VnetBackupRestoreEnabled)
+					state.VirtualNetworkContentShareEnabled = pointer.From(props.VnetContentShareEnabled)
 					state.VnetImagePullEnabled = pointer.From(props.VnetImagePullEnabled)
 					if hostingEnv := props.HostingEnvironmentProfile; hostingEnv != nil {
 						state.HostingEnvId = pointer.From(hostingEnv.Id)
@@ -826,6 +835,10 @@ func (r LinuxWebAppSlotResource) Update() sdk.ResourceFunc {
 
 			if metadata.ResourceData.HasChange("virtual_network_backup_restore_enabled") {
 				model.Properties.VnetBackupRestoreEnabled = pointer.To(state.VirtualNetworkBackupRestoreEnabled)
+			}
+
+			if metadata.ResourceData.HasChange("virtual_network_content_share_enabled") {
+				model.Properties.VnetContentShareEnabled = pointer.To(state.VirtualNetworkContentShareEnabled)
 			}
 
 			if metadata.ResourceData.HasChange("virtual_network_subnet_id") {

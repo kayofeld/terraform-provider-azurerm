@@ -46,6 +46,7 @@ type LinuxWebAppModel struct {
 	Enabled                            bool                                       `tfschema:"enabled"`
 	HttpsOnly                          bool                                       `tfschema:"https_only"`
 	VirtualNetworkBackupRestoreEnabled bool                                       `tfschema:"virtual_network_backup_restore_enabled"`
+	VirtualNetworkContentShareEnabled  bool                                       `tfschema:"virtual_network_content_share_enabled"`
 	VirtualNetworkSubnetID             string                                     `tfschema:"virtual_network_subnet_id"`
 	KeyVaultReferenceIdentityID        string                                     `tfschema:"key_vault_reference_identity_id"`
 	LogsConfig                         []helpers.LogsConfig                       `tfschema:"logs"`
@@ -154,6 +155,12 @@ func (r LinuxWebAppResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"virtual_network_backup_restore_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+
+		"virtual_network_content_share_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
 			Default:  false,
@@ -386,6 +393,7 @@ func (r LinuxWebAppResource) Create() sdk.ResourceFunc {
 					ClientCertEnabled:        pointer.To(webApp.ClientCertEnabled),
 					ClientCertMode:           pointer.To(webapps.ClientCertMode(webApp.ClientCertMode)),
 					VnetBackupRestoreEnabled: pointer.To(webApp.VirtualNetworkBackupRestoreEnabled),
+					VnetContentShareEnabled:  pointer.To(webApp.VirtualNetworkContentShareEnabled),
 					VnetImagePullEnabled:     pointer.To(webApp.VnetImagePullEnabled),
 					VnetRouteAllEnabled:      siteConfig.VnetRouteAllEnabled,
 				},
@@ -645,6 +653,7 @@ func (r LinuxWebAppResource) Read() sdk.ResourceFunc {
 					state.PossibleOutboundIPAddressList = strings.Split(pointer.From(props.PossibleOutboundIPAddresses), ",")
 					state.PublicNetworkAccess = !strings.EqualFold(pointer.From(props.PublicNetworkAccess), helpers.PublicNetworkAccessDisabled)
 					state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.VnetBackupRestoreEnabled)
+					state.VirtualNetworkContentShareEnabled = pointer.From(props.VnetContentShareEnabled)
 					state.VnetImagePullEnabled = pointer.From(props.VnetImagePullEnabled)
 					servicePlanId, err := commonids.ParseAppServicePlanIDInsensitively(pointer.From(props.ServerFarmId))
 					if err != nil {
@@ -848,6 +857,10 @@ func (r LinuxWebAppResource) Update() sdk.ResourceFunc {
 
 			if metadata.ResourceData.HasChange("virtual_network_backup_restore_enabled") {
 				model.Properties.VnetBackupRestoreEnabled = pointer.To(state.VirtualNetworkBackupRestoreEnabled)
+			}
+
+			if metadata.ResourceData.HasChange("virtual_network_content_share_enabled") {
+				model.Properties.VnetContentShareEnabled = pointer.To(state.VirtualNetworkContentShareEnabled)
 			}
 
 			if metadata.ResourceData.HasChange("vnet_image_pull_enabled") {

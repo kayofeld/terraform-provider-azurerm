@@ -64,6 +64,7 @@ type WindowsFunctionAppModel struct {
 	StorageAccounts                    []helpers.StorageAccount               `tfschema:"storage_account"`
 	Tags                               map[string]string                      `tfschema:"tags"`
 	VirtualNetworkBackupRestoreEnabled bool                                   `tfschema:"virtual_network_backup_restore_enabled"`
+	VirtualNetworkContentShareEnabled  bool                                   `tfschema:"virtual_network_content_share_enabled"`
 	VirtualNetworkSubnetID             string                                 `tfschema:"virtual_network_subnet_id"`
 	ZipDeployFile                      string                                 `tfschema:"zip_deploy_file"`
 	PublishingDeployBasicAuthEnabled   bool                                   `tfschema:"webdeploy_publish_basic_authentication_enabled"`
@@ -291,6 +292,12 @@ func (r WindowsFunctionAppResource) Arguments() map[string]*pluginsdk.Schema {
 		"tags": commonschema.Tags(),
 
 		"virtual_network_backup_restore_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+
+		"virtual_network_content_share_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
 			Default:  false,
@@ -541,6 +548,7 @@ func (r WindowsFunctionAppResource) Create() sdk.ResourceFunc {
 					ClientCertMode:           pointer.To(webapps.ClientCertMode(functionApp.ClientCertMode)),
 					DailyMemoryTimeQuota:     pointer.To(functionApp.DailyMemoryTimeQuota),
 					VnetBackupRestoreEnabled: pointer.To(functionApp.VirtualNetworkBackupRestoreEnabled),
+					VnetContentShareEnabled:  pointer.To(functionApp.VirtualNetworkContentShareEnabled),
 					VnetImagePullEnabled:     pointer.To(functionApp.VnetImagePullEnabled),
 					VnetRouteAllEnabled:      siteConfig.VnetRouteAllEnabled,
 				},
@@ -770,6 +778,7 @@ func (r WindowsFunctionAppResource) Read() sdk.ResourceFunc {
 					state.DefaultHostname = pointer.From(props.DefaultHostName)
 					state.PublicNetworkAccess = !strings.EqualFold(pointer.From(props.PublicNetworkAccess), helpers.PublicNetworkAccessDisabled)
 					state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.VnetBackupRestoreEnabled)
+					state.VirtualNetworkContentShareEnabled = pointer.From(props.VnetContentShareEnabled)
 					state.VnetImagePullEnabled = pointer.From(props.VnetImagePullEnabled)
 
 					servicePlanId, err := commonids.ParseAppServicePlanIDInsensitively(pointer.From(props.ServerFarmId))
@@ -990,6 +999,10 @@ func (r WindowsFunctionAppResource) Update() sdk.ResourceFunc {
 
 			if metadata.ResourceData.HasChange("virtual_network_backup_restore_enabled") {
 				model.Properties.VnetBackupRestoreEnabled = pointer.To(state.VirtualNetworkBackupRestoreEnabled)
+			}
+
+			if metadata.ResourceData.HasChange("virtual_network_content_share_enabled") {
+				model.Properties.VnetContentShareEnabled = pointer.To(state.VirtualNetworkContentShareEnabled)
 			}
 
 			if metadata.ResourceData.HasChange("virtual_network_subnet_id") {

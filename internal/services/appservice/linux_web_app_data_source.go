@@ -63,6 +63,7 @@ type LinuxWebAppDataSourceModel struct {
 	PublishingFTPBasicAuthEnabled      bool                                       `tfschema:"ftp_publish_basic_authentication_enabled"`
 	SiteCredentials                    []helpers.SiteCredential                   `tfschema:"site_credential"`
 	VirtualNetworkBackupRestoreEnabled bool                                       `tfschema:"virtual_network_backup_restore_enabled"`
+	VirtualNetworkContentShareEnabled  bool                                       `tfschema:"virtual_network_content_share_enabled"`
 	VirtualNetworkSubnetID             string                                     `tfschema:"virtual_network_subnet_id"`
 }
 
@@ -248,6 +249,11 @@ func (r LinuxWebAppDataSource) Attributes() map[string]*pluginsdk.Schema {
 			Computed: true,
 		},
 
+		"virtual_network_content_share_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Computed: true,
+		},
+
 		"virtual_network_subnet_id": {
 			Type:     pluginsdk.TypeString,
 			Computed: true,
@@ -394,6 +400,7 @@ func (r LinuxWebAppDataSource) Read() sdk.ResourceFunc {
 					}
 
 					webApp.VirtualNetworkBackupRestoreEnabled = pointer.From(props.VnetBackupRestoreEnabled)
+					webApp.VirtualNetworkContentShareEnabled = pointer.From(props.VnetContentShareEnabled)
 
 					if subnetId := pointer.From(props.VirtualNetworkSubnetId); subnetId != "" {
 						webApp.VirtualNetworkSubnetID = subnetId

@@ -59,6 +59,7 @@ type LinuxFunctionAppDataSourceModel struct {
 	Tags                             map[string]string                    `tfschema:"tags"`
 
 	VirtualNetworkBackupRestoreEnabled bool     `tfschema:"virtual_network_backup_restore_enabled"`
+	VirtualNetworkContentShareEnabled  bool     `tfschema:"virtual_network_content_share_enabled"`
 	VirtualNetworkSubnetID             string   `tfschema:"virtual_network_subnet_id"`
 	CustomDomainVerificationId         string   `tfschema:"custom_domain_verification_id"`
 	DefaultHostname                    string   `tfschema:"default_hostname"`
@@ -277,6 +278,11 @@ func (d LinuxFunctionAppDataSource) Attributes() map[string]*pluginsdk.Schema {
 			Computed: true,
 		},
 
+		"virtual_network_content_share_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Computed: true,
+		},
+
 		"virtual_network_subnet_id": {
 			Type:     pluginsdk.TypeString,
 			Computed: true,
@@ -394,6 +400,7 @@ func (d LinuxFunctionAppDataSource) Read() sdk.ResourceFunc {
 					state.Usage = string(pointer.From(props.UsageState))
 					state.PublicNetworkAccess = !strings.EqualFold(pointer.From(props.PublicNetworkAccess), helpers.PublicNetworkAccessDisabled)
 					state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.VnetBackupRestoreEnabled)
+					state.VirtualNetworkContentShareEnabled = pointer.From(props.VnetContentShareEnabled)
 
 					if hostingEnv := props.HostingEnvironmentProfile; hostingEnv != nil {
 						state.HostingEnvId = pointer.From(hostingEnv.Id)

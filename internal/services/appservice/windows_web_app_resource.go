@@ -67,6 +67,7 @@ type WindowsWebAppModel struct {
 	ZipDeployFile                      string                                     `tfschema:"zip_deploy_file"`
 	Tags                               map[string]string                          `tfschema:"tags"`
 	VirtualNetworkBackupRestoreEnabled bool                                       `tfschema:"virtual_network_backup_restore_enabled"`
+	VirtualNetworkContentShareEnabled  bool                                       `tfschema:"virtual_network_content_share_enabled"`
 	VirtualNetworkImagePullEnabled     bool                                       `tfschema:"virtual_network_image_pull_enabled"`
 	VirtualNetworkSubnetID             string                                     `tfschema:"virtual_network_subnet_id"`
 }
@@ -198,6 +199,12 @@ func (r WindowsWebAppResource) Arguments() map[string]*pluginsdk.Schema {
 		"tags": commonschema.Tags(),
 
 		"virtual_network_backup_restore_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+
+		"virtual_network_content_share_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
 			Default:  false,
@@ -402,6 +409,7 @@ func (r WindowsWebAppResource) Create() sdk.ResourceFunc {
 					ClientCertEnabled:        pointer.To(webApp.ClientCertEnabled),
 					ClientCertMode:           pointer.To(webapps.ClientCertMode(webApp.ClientCertMode)),
 					VnetBackupRestoreEnabled: pointer.To(webApp.VirtualNetworkBackupRestoreEnabled),
+					VnetContentShareEnabled:  pointer.To(webApp.VirtualNetworkContentShareEnabled),
 					VnetRouteAllEnabled:      siteConfig.VnetRouteAllEnabled,
 				},
 			}
@@ -690,6 +698,7 @@ func (r WindowsWebAppResource) Read() sdk.ResourceFunc {
 					state.PossibleOutboundIPAddressList = strings.Split(pointer.From(props.PossibleOutboundIPAddresses), ",")
 					state.PublicNetworkAccess = !strings.EqualFold(pointer.From(props.PublicNetworkAccess), helpers.PublicNetworkAccessDisabled)
 					state.VirtualNetworkBackupRestoreEnabled = pointer.From(props.VnetBackupRestoreEnabled)
+					state.VirtualNetworkContentShareEnabled = pointer.From(props.VnetContentShareEnabled)
 					state.VirtualNetworkImagePullEnabled = pointer.From(props.VnetImagePullEnabled)
 
 					serverFarmId, err := commonids.ParseAppServicePlanIDInsensitively(pointer.From(props.ServerFarmId))
@@ -885,6 +894,10 @@ func (r WindowsWebAppResource) Update() sdk.ResourceFunc {
 
 			if metadata.ResourceData.HasChange("virtual_network_backup_restore_enabled") {
 				model.Properties.VnetBackupRestoreEnabled = pointer.To(state.VirtualNetworkBackupRestoreEnabled)
+			}
+
+			if metadata.ResourceData.HasChange("virtual_network_content_share_enabled") {
+				model.Properties.VnetContentShareEnabled = pointer.To(state.VirtualNetworkContentShareEnabled)
 			}
 
 			if metadata.ResourceData.HasChange("virtual_network_image_pull_enabled") {
